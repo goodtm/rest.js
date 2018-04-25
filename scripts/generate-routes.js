@@ -225,13 +225,20 @@ Object.keys(CURRENT_ROUTES).sort().forEach(scope => {
       }
     })
 
-    // Workaround for https://github.com/octokit/routes/issues/121
-    Object.keys(currentParams).forEach(name => {
-      // temporary workaround, remove before merging PR
-      if (!currentEndpoint.params[name]) {
+    // map header parameters to `headers.<parameter name>`
+    Object.keys(newParams).forEach(name => {
+      const location = newParams[name].location
+      delete newParams[name].location
+      if (location !== 'headers') {
         return
       }
 
+      currentEndpoint.params[`headers.${name.toLowerCase()}`] = currentEndpoint.params[name]
+      delete currentEndpoint.params[name]
+    })
+
+    // Workaround for https://github.com/octokit/routes/issues/121
+    Object.keys(currentParams).forEach(name => {
       if (!currentEndpoint.params[name].enum) {
         return
       }
@@ -244,18 +251,6 @@ Object.keys(CURRENT_ROUTES).sort().forEach(scope => {
 
       currentEndpoint.params[name].validation = `^(${currentEndpoint.params[name].enum.join('|')})$`.replace(/<\w+_id>/, '\\d+')
       delete currentEndpoint.params[name].enum
-    })
-
-    // map header parameters to `headers.<parameter name>`
-    Object.keys(newParams).forEach(name => {
-      const location = newParams[name].location
-      delete newParams[name].location
-      if (location !== 'headers') {
-        return
-      }
-
-      currentEndpoint.params[`headers.${name.toLowerCase()}`] = currentEndpoint.params[name]
-      delete currentEndpoint.params[name]
     })
 
     newRoutes[scope][methodName] = currentEndpoint
