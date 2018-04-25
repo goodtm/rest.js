@@ -10,6 +10,12 @@ function sortRoutesByKeys (routes) {
 
     Object.keys(routes[scope]).forEach(method => {
       routes[scope][method] = sortByKeys(routes[scope][method])
+
+      // routes-for-api-docs keeps parameters as array, while lib/routes.json uses an object
+      if (Array.isArray(routes[scope][method].params)) {
+        return
+      }
+
       routes[scope][method].params = sortByKeys(routes[scope][method].params)
 
       Object.keys(routes[scope][method].params).forEach(paramName => {
@@ -269,4 +275,4 @@ newRoutes.users.unsuspend = CURRENT_ROUTES.users.unsuspend
 newRoutes.integrations = CURRENT_ROUTES.integrations
 
 writeFileSync('lib/routes.json', JSON.stringify(sortRoutesByKeys(newRoutes), null, 2) + '\n')
-// writeFileSync('scripts/routes-for-api-docs.json', JSON.stringify(sortRoutesByKeys(newDocRoutes), null, 2))
+writeFileSync('scripts/routes-for-api-docs.json', JSON.stringify(sortRoutesByKeys(newDocRoutes), null, 2))
